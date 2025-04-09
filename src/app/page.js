@@ -1,95 +1,169 @@
-import Image from "next/image";
-import styles from "./page.module.css";
 
-export default function Home() {
+
+
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import './products.css';
+
+const Home = () => {
+  
+  const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [customizable, setCustomizable] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [priceRange, setPriceRange] = useState('');
+  const [selectedRating, setSelectedRating] = useState('');
+
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  
+  useEffect(() => {
+    filterProducts();
+  }, [selectedCategory, customizable, priceRange,selectedRating]);
+
+  const fetchProducts = async () => {
+    const res = await fetch('https://fakestoreapi.com/products');
+    const data = await res.json();
+    setProducts(data);
+    setFilteredProducts(data);
+    const uniqueCategories = ['All', ...new Set(data.map(item => item.category))];
+    setCategories(uniqueCategories);
+  };
+
+ 
+
+
+  const filterProducts = () => {
+    let updated = [...products];
+  
+    if (selectedCategory !== 'All') {
+      updated = updated.filter(product => product.category === selectedCategory);
+    }
+  
+    if (customizable) {
+      updated = updated.filter(product => product.id % 2 === 0);
+    }
+  
+    if (priceRange !== '') {
+      const [min, max] = priceRange.split('-').map(Number);
+      updated = updated.filter(product =>
+        max ? product.price >= min && product.price <= max : product.price >= min
+      );
+    }
+  
+    if (selectedRating !== '') {
+      updated = updated.filter(product => product.rating?.rate >= Number(selectedRating));
+    }
+  
+    setFilteredProducts(updated);
+  };
+  
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>src/app/page.js</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <div>
+      <section className="hero">
+        <h1>DISCOVER OUR PRODUCTS</h1>
+        <p>
+          Lorem ipsum dolor sit amet consectetur. Amet est posuere rhoncus
+          scelerisque...
+        </p>
+      </section>
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      <div className="container">
+
+       
+        <button className="filter-toggle" onClick={() => setShowMobileFilters(!showMobileFilters)}>
+          {showMobileFilters ? 'Hide Filters' : 'Show Filters'}
+        </button>
+
+      
+        <aside className={`sidebar ${showMobileFilters ? 'show' : ''}`}>
+
+        <div className="product-count">
+  Total {filteredProducts.length} products
+</div>
+          <h3>Filter</h3>
+          <div className="filter-group">
+            <label htmlFor="category">Category</label>
+            <select
+              id="category"
+              value={selectedCategory}
+              onChange={e => setSelectedCategory(e.target.value)}
+            >
+              {categories.map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="filter-group">
+            <label>
+              <input
+                type="checkbox"
+                checked={customizable}
+                onChange={e => setCustomizable(e.target.checked)}
+              />
+              Customizable
+            </label>
+          </div>
+
+          <div className="filter-group">
+  <label htmlFor="price">Price Range</label>
+  <select
+    id="price"
+    value={priceRange}
+    onChange={e => setPriceRange(e.target.value)}
+  >
+    <option value="">All</option>
+    <option value="0-20">0$ - 20$</option>
+    <option value="20-50">20$ - 50$</option>
+    <option value="50-100">50$ - 100$</option>
+    <option value="100-1000">100$ and more</option>
+  </select>
+</div>
+
+
+<div className="filter-group">
+  <label htmlFor="rating">Minimum Rating</label>
+  <select
+    id="rating"
+    value={selectedRating}
+    onChange={e => setSelectedRating(e.target.value)}
+  >
+    <option value="">All</option>
+    <option value="1">1 ★ </option>
+    <option value="2">2 ★★ </option>
+    <option value="3">3 ★★★ </option>
+    <option value="4">4 ★★★★ </option>
+    <option value="5">5 ★★★★★</option>
+  </select>
+</div>
+
+        </aside>
+
+       
+        <main className="product-grid">
+          {filteredProducts.length === 0 ? (
+            <p>No products match your filters.</p>
+          ) : (
+            filteredProducts.map(product => (
+              <div className="product-card" key={product.id}>
+                <img src={product.image} alt={product.title} />
+                <h4>{product.title}</h4>
+                <p>${product.price}</p>
+                <p>Rating: {product.rating?.rate} ★</p>
+              </div>
+            ))
+          )}
+        </main>
+      </div>
     </div>
   );
-}
+};
+
+export default Home;
